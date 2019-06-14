@@ -1,650 +1,265 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8">
-	<title>ThreeJs</title>
-	<script src="scripts/three.js"></script>
-	<script src="scripts/Stats.js"></script>
-	<script src="scripts/tween.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        html,body{
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        #canvas-example{
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            margin: auto;
+        }
+        canvas{
+            position: absolute;
+            z-index: 99;
+            background: #fff;
+        }
+    </style>
 </head>
-<style>
-	*{
-		margin: 0;
-		padding: 0;
-	}
-	html,body{
-		width: 100%;
-		height: 100%;
-		position: relative;
-	}
-	#canvas-example{
-		width: 100%;
-		height: 100%;
-		position: absolute;
-		top: 0;
-		right: 0;
-		bottom: 0;
-		left: 0;
-		margin: auto;
-	}
-	canvas{
-		position: absolute;
-		z-index: 99;
-		background: #000;
-	}
-</style>
 <body>
-	<div id="canvas-example">
-		
-	</div>
-	<script src="scripts/time.js"></script>
-	<script>
-		'use strict'
-		/* THREE.REVISION 93dev */
-		var requestAnimationFrame = window.requestAnimationFrames
-			|| window.mozRequestAnimationFrames
-			|| window.webkitRequestAnimationFrame
-			|| window.msRequestAnimationFrame
-			|| function(callback){ window.setTimeout(callback, 1000 / 60) };
-		/* 性能检测 */
-		var stats = new Stats();
-		stats.setMode(1);
-		stats.domElement.style.position = 'absolute';
-		stats.domElement.style.left = '0';
-		stats.domElement.style.top = '0';
-		stats.domElement.style.zIndex = '99';
-		document.body.appendChild( stats.domElement );
-		setInterval( function(){
-			stats.begin();
-			stats.end();
-		}, 1000/60 );
+    <div id="canvas-example">
 
-
-
-		var renderer;
-		var width,height;
-		function initThree(){
-			width = document.getElementById('canvas-example').clientWidth;
-			height = document.getElementById('canvas-example').clientHeight;
-			renderer = new THREE.WebGLRenderer({
+    </div>
+    <script src="scripts/three.min.js"></script>
+    <script src="scripts/tween.min.js"></script>
+    <script>
+        (function(main){
+            main();
+        })(function(){
+            'use strict'
+            /* THREE.REVISION 93dev */
+            var requestAnimationFrame = window.requestAnimationFrames
+                || window.mozRequestAnimationFrames
+                || window.webkitRequestAnimationFrame
+                || window.msRequestAnimationFrame
+                || function(callback){ window.setTimeout(callback, 1000 / 60) };
+            var renderer, width, height, group, mouseX = 0, mouseY = 0,tween,tween1;
+            width = document.getElementById('canvas-example').clientWidth;
+            height = document.getElementById('canvas-example').clientHeight;
+            renderer = new THREE.WebGLRenderer({
 				antialias: true
 			})
-			renderer.setSize(width, height);
-			renderer.shadowMapEnabled = true; //是否开启阴影
-			renderer.shadowMapSoft = true; //软阴影
-			document.getElementById('canvas-example').appendChild(renderer.domElement);
-			renderer.setClearColor(0x000000, 1.0);
-		}
-		var camera;
-		function initCamera(){
-			camera = new THREE.PerspectiveCamera(45, width / height, 1, 2000);
-			/* 透视摄像机 和 正投影摄像机 */ 
-			/* 参数 照相机打开角度（近大远小）  视野长宽比路  显示的视野远近范围 */
-			camera.position.set( 0, 0, 1500 ); /*照相机放置的位置 */
-			camera.lookAt( -100, 100, 0 );/* 照相机观看的角度 */
-		}
-		var scene;
-		function initScene(){
-			scene = new THREE.Scene();
-			/* 场景 */ 
-		}
-		var light; /* 灯光 */
-		function initLight(){
-			// var ambientLight = new THREE.AmbientLight(0x663344, 2);
-    		// scene.add(ambientLight);
-			// light = new THREE.DirectionalLight(0xfffffff, 1.0);/* 方向光 */
-			// light = new THREE.AmbientLight(0xFF0000, 1.0, 0);/* 环境光 同样明暗程度 */
-			// light = new THREE.PointLight(0xFF0000, 1.0, 1000);/* 点光源 颜色 光强 距离 */
-			light = new THREE.SpotLight(0xFFFFFF, 1.0, 0, 10, 10);/* 聚光灯 颜色 光强 衰减距离 角度 衰减速度 */
-			light.position.set(0, 1000, 0);
-		    light.castShadow = true;
-		    // light.shadow.camera.left = -400;
-		    // light.shadow.camera.right = 400;
-		    // light.shadow.camera.top = 400;
-		    // light.shadow.camera.bottom = -400;
-		    light.shadow.camera.near = 1;
-		    light.shadow.camera.far = 1100;
-		    // light.shadow.mapSize.width = 2048;
-		    // light.shadow.mapSize.height = 2048;
-			scene.add(light)
-		}
-		/* 案例一 */ 
-		var THREE_init = function(){
-			var cube;
-			function initCube(){
-				var geometry = new THREE.Geometry();
-				var material = new THREE.LineBasicMaterial( {vertexColors: true} );
-				var color1 = new THREE.Color( 0x444444 ),
-					color2 = new THREE.Color( 0xFF0000 );
+            renderer.setSize(width, height);
+            renderer.setPixelRatio( window.devicePixelRatio );
+            document.getElementById('canvas-example').appendChild(renderer.domElement);
+            renderer.setClearColor(0x888888, 1);
+            renderer.shadowMapEnabled = true; //是否开启阴影
+            renderer.shadowMapSoft = true; //软阴影
+            
+            var camera;
+            camera = new THREE.PerspectiveCamera( 45, width/height, 1, 2000 );
+            camera.position.set(0, 100, 800);
 
-				var p1 = new THREE.Vector3(-100, 0, 100);
-				var p2 = new THREE.Vector3(100, 0, -100);
-				geometry.vertices.push(p1);
-				geometry.vertices.push(p2);
-				geometry.colors.push(color1, color2);
+            var scene;
+            scene = new THREE.Scene();
+            var group = new THREE.Group();
+            scene.rotation.x = Math.PI/5;
+            scene.rotation.y = -Math.PI/5;
+            scene.add(group);
 
-				var lines = new THREE.Line(geometry, material);
-				scene.add(lines);
-			}
-			function threeStart(){
-				initThree();
-				initCamera();
-				initScene();
-				initLight();
-				initCube();
+            var directionalLight = new THREE.SpotLight(0xFFFFFF, 1.0, 0, 10, 10);;
+            directionalLight.position.x = 0;
+            directionalLight.position.y = 500;
+            directionalLight.position.z = -100;
+            directionalLight.intensity = 3;
+            directionalLight.castShadow = true;
+            directionalLight.shadow.camera.near = 1;
+		    directionalLight.shadow.camera.far = 2000;
+            
+            scene.add(directionalLight);
 
-				console.log(scene)
-				renderer.clear();
-	            renderer.render(scene, camera);
-			}
-			threeStart();
-		}
-		// THREE_init();
+            var destice = 1;
+            var data = {
+                startposition: {x: 0, y: 0, z: 0},
+                nowposition:{x:0, y:0, z:0}
+            }
 
-		/* requestAnimationFrame */ 
-		var THREE_act = function(){
-			var mesh, mesh1;
-			var a = 1;
-			var initObject = function(){
-				var geometry = new THREE.CylinderGeometry( 100, 100, 300, 4 );
-				/* 圆柱形物体 顶部宽度 底部宽度 高度 面数 */ 
-				var material = new THREE.MeshLambertMaterial( { color: 0xFFFFFF } );
-				mesh = new THREE.Mesh( geometry, material );
-				mesh1 = new THREE.Mesh( geometry, material );
-				mesh.position.set(0,0,0);
-				mesh1.position.set(-200,0,-100);
-				scene.add(mesh);
-				scene.add(mesh1);
-			}
-			function threeStart(){
-				initThree();
-				initCamera();
-				initScene();
-				initLight();
-				initObject();
-				animation();
-				
-				renderer.clear();
-	            renderer.render(scene, camera);
-			}
-			threeStart();	
-			// 动画函数
-			function animation(){
-				/* 转动物体 */ 
-				mesh.position.x -= a;
-				if(mesh.position.x < -200){
-					a = -1;
-				} else if(mesh.position.x > 200) {
-					a = 1;
-				}
-				// 移动照相机
-				// camera.position.y -= a;
-				// light.position.x -= a;
-				// if(camera.position.y < -200){
-				// 	a = -1;
-				// } else if(camera.position.y > 200) {
-				// 	a = 1;
-				// }
-				requestAnimationFrame(animation);
-				renderer.render(scene, camera);
-				stats.update();
-			}
-		}
-		// THREE_act();
+            // 添加人物 
+            var geometry = new THREE.CylinderGeometry( 20, 20, 60, 20 );
+            var material = new THREE.MeshLambertMaterial( { color: 0xFFFFFF } );
+            var mesh = new THREE.Mesh( geometry, material );
+            mesh.castShadow = true;
+            mesh.position.set(data.startposition.x,data.startposition.y,data.startposition.z);
+            group.add(mesh);
+            var thisbox;
+            var prevbox;
+            var geometryCube = new THREE.BoxBufferGeometry( 100, 50, 100 );
+            var materialCube = new THREE.MeshLambertMaterial( { color: 0xFFFFFF } );
+            function addBlock(x, y, z){
+                // 添加方块
+                var cube = new THREE.Mesh( geometryCube, materialCube );
+                data.nowposition.x = x;
+                data.nowposition.y = y;
+                data.nowposition.z = z;
+                cube.castShadow = true;
+                cube.receiveShadow = true;  
+                cube.position.set(x,y+50,z);
+                prevbox = thisbox;
+                thisbox = cube;
+                group.add(cube);
 
-		/* 纹理 */
-		var THREE_texture = function(){
-			initThree();
-			initCamera();
-			initScene();
-			initLight();
-			animation();
-			var mesh;
-			var texture = new THREE.TextureLoader();
-			var material;
-			var geometry = new THREE.PlaneGeometry( 300, 300, 1 );
-			geometry.vertices[0].uv = new THREE.Vector2( 0, 0 );
-			geometry.vertices[1].uv = new THREE.Vector2( 1, 0 );
-			geometry.vertices[2].uv = new THREE.Vector2( 1, 1 );
-			geometry.vertices[3].uv = new THREE.Vector2( 0, 1 );
-			// console.log(geometry)
-			texture.load('/images/240450-140HZP45790.jpg', function(loader){
-				material = new THREE.MeshBasicMaterial( {map: loader} );
-				mesh = new THREE.Mesh( geometry, material );
-				scene.add(mesh);
-			}, 'undefined', function(err){
-				console.log(err)
-			})
-			console.log(mesh)
-			function animation(){
-				if(typeof mesh !== 'undefined'){
-					mesh.rotation.y += 0.01;
-				}
-				renderer.render( scene, camera );
-				requestAnimationFrame(animation);
-			}
-		} 
-		// THREE_texture();
+                var tweenCube = new TWEEN.Tween(cube.position);
+                tweenCube.easing(TWEEN.Easing.Sinusoidal.In);
+                tweenCube.to({y: cube.position.y-50}, 100);
+                tweenCube.start();
+            }
 
-		/* canvas 贴图 */
-		var THREE_canvas = function(){
-			initThree();
-			initCamera();
-			initScene();
-			initLight();
-			clock();
-			var geometry = new THREE.CubeGeometry(200, 200, 200);
-			var texture = new THREE.CanvasTexture(canvas);
-			var material = new THREE.MeshBasicMaterial({map:texture});
-			texture.needsUpdate = true;
-			console.log(texture)
+            // 添加初始方块
+            addBlock(0, -60, 0);
+            destice = Math.random()>0.5? 1:-1;
+            if(destice == 1){
+                data.nowposition.z -= 200;
+            } else {
+               data.nowposition.x -= 200;
+            }
+            addBlock(data.nowposition.x, data.nowposition.y, data.nowposition.z);
 
-			/* 在这里  修改了 three.js 19714行 注释了警告 */
+            animation();
 
-			var mesh = new THREE.Mesh( geometry, material );
-			var mesh1 = new THREE.Mesh( geometry, material );
-			/* 球体 */ 
-			var mesh2 = new THREE.Mesh( new THREE.SphereGeometry( 200, 30, 36, Math.PI / 2, Math.PI ), new THREE.MeshPhongMaterial({
-					color: 0Xffff00,
-					specular: 0Xff0000,
-					wireframe: true
-				}) 
-			);
-			/* 甜甜圈 */
-			var mesh3 = new THREE.Mesh(new THREE.TorusKnotGeometry(200, 30, 32, 8), 
-				new THREE.MeshBasicMaterial({
-					color: 0Xff1001,
-					wireframe: true
-				})
-			) 
-			mesh1.position.x = -300;
-			mesh2.position.x = 500;
-			mesh2.position.z = -200;
-			mesh2.position.y = 200;
-			mesh3.position.x = 600;
-			mesh3.position.y = -300;
-			scene.add(mesh);
-			scene.add(mesh1);
-			scene.add(mesh2);
-			scene.add(mesh3);
-			function animation(){
-				mesh.rotation.x += 0.01;
-				mesh.rotation.y += 0.01;
-				mesh1.rotation.x -= 0.01;
-				mesh1.rotation.y -= 0.01;
-				mesh2.rotation.x -= 0.02;
-				mesh2.rotation.y -= 0.02;
-				mesh3.rotation.x -= 0.04;
-				mesh3.rotation.y -= 0.04;
-				texture.needsUpdate = true;
-				renderer.render( scene, camera );
-				requestAnimationFrame(animation);
-			}
-			animation();
-		}
-		// THREE_canvas();
+            function animation(){
+                TWEEN.update();
+                renderer.render(scene, camera);
+                requestAnimationFrame(animation);
+            }
 
+            var clickfalg = true;
+            var canstart = true;
+            document.getElementById('canvas-example').addEventListener('mousedown', function(){
+                if(!canstart){
+                    return false;
+                }
+                TWEEN.removeAll();
+                canstart = false;
+                // 按下事件
+                clickfalg = true;
+                // 缩小动画
+                var tweenTouch = new TWEEN.Tween(mesh.scale);
+                tweenTouch.easing(TWEEN.Easing.Sinusoidal.In);
+                tweenTouch.to({y: 0.5}, 500);
+                tweenTouch.start();
+                var tweenTouchY = new TWEEN.Tween(mesh.position);
+                tweenTouchY.easing(TWEEN.Easing.Sinusoidal.In);
+                tweenTouchY.to({y: -75/4}, 500);
+                tweenTouchY.start();
+            })
+            document.getElementById('canvas-example').addEventListener('mouseup',function(){
+                if(!clickfalg){
+                    return false;
+                }
+                TWEEN.removeAll();
+                var thisdistence = mesh.scale.y;//获取跳跃的距离
+                var mustdis = Math.floor((1-thisdistence)*500);
+                clickfalg = false;
+                mesh.position.y = 0;
 
-		/* 弹球动画 */
-		var THREE_ball = function(){
-			initThree();
-			initCamera();
-			initScene();
-			initLight();
-			var v = 0;
-			var maxHeight = 400;
-			var a = -0.2;
-			// 创建球体
-			var ballMesh = null;
-			ballMesh = new THREE.Mesh(
-				new THREE.SphereGeometry(100, 16, 8),
-				new THREE.MeshLambertMaterial({
-					color: 0Xffff00
-				})
-			);
-			ballMesh.castShadow = true;
-			ballMesh.position.y = maxHeight;
-			scene.add(ballMesh);
-			var plane = null;
-			plane = new THREE.Mesh(
-				new THREE.PlaneGeometry(1000, 700),
-				new THREE.MeshLambertMaterial({color: 0Xffff00})
-			)
-			plane.receiveShadow = true;
-			plane.rotation.x = -Math.PI / 3;
-			scene.add(plane);
+                var tweenTouch1 = new TWEEN.Tween(mesh.scale);
+                tweenTouch1.easing(TWEEN.Easing.Sinusoidal.In);
+                tweenTouch1.to({y: 1}, 400);
+                tweenTouch1.start();
+                // 跳跃
+                var pos = {
+                    x: mesh.position.x,
+                    y: mesh.position.y,
+                    z: mesh.position.z
+                }
+                var position;
+                if(destice == 1){
+                    var chhange = mustdis  * (thisbox.position.x-pos.x)/(thisbox.position.z-pos.z);
+                    position = {
+                        x: mesh.position.x - chhange,
+                        y: mesh.position.y,
+                        z: mesh.position.z-mustdis
+                    }
+                } else {
+                    var chhange = mustdis  * (thisbox.position.z-pos.z) / (thisbox.position.x-pos.x);
+                    position = {
+                        x: mesh.position.x - mustdis,
+                        y: mesh.position.y,
+                        z: mesh.position.z - chhange
+                    }
+                }
+                // 跳跃动画
+                tween = new TWEEN.Tween(pos);
+                tween1 = new TWEEN.Tween(mesh.rotation);
+                tween.easing(TWEEN.Easing.Sinusoidal.In);
+                tween1.easing(TWEEN.Easing.Sinusoidal.In);
+                tween.to(position, 500);
+                if(destice == 1){
+                    tween1.to({x: -Math.PI*2}, 400);
+                } else {
+                    tween1.to({z: Math.PI*2}, 400);
+                }
+                tween.start();
+                tween1.start();
+                tween.onUpdate(function(value){
+                    if(destice == 1){
+                        mesh.position.z = (1 - value) * (1 - value) * mesh.position.z + 2 * value * (1 - value) * (mesh.position.z + position.z) / 2 + value * value * (position.z);
+		                mesh.position.y = (1 - value) * (1 - value) * mesh.position.y + 2 * value * (1 - value) * (position.y+200) + value * value * (position.y);
+                        mesh.position.x = pos.x;
+                    } else {
+                        mesh.position.x = (1 - value) * (1 - value) * mesh.position.x + 2 * value * (1 - value) * (mesh.position.x + position.x) / 2 + value * value * (position.x);
+		                mesh.position.y = (1 - value) * (1 - value) * mesh.position.y + 2 * value * (1 - value) * (position.y + 200) + value * value * (position.y);
+                        mesh.position.z = pos.z;
+                    }
+                })
+                tween1.onComplete(function(){
+                    mesh.rotation.x = 0;
+                    mesh.rotation.z = 0;
+                })
+                tween.onComplete(function(){
+                    // 判断是否失败
+                    var lastdis =  Math.pow( thisbox.position.x-mesh.position.x ,2) + Math.pow( thisbox.position.y-mesh.position.y ,2) + Math.pow( thisbox.position.z-mesh.position.z ,2);
+                    var prev = Math.pow( prevbox.position.x-mesh.position.x ,2) + Math.pow( prevbox.position.y-mesh.position.y ,2) + Math.pow( prevbox.position.z-mesh.position.z ,2);
+                    if( prev <= 110*50 ){
+                        canstart = true;
+                        return false;
+                    } else if(lastdis >= 110*50) {
+                        alert('掉出去了');
+                        location.reload();
+                        return false;
+                    }
 
-			function animation(){
-				v += a;
-				ballMesh.position.y += v;
-				if(ballMesh.position.y <= 100){
-					v = -v * 0.9;
-				}
-				if (ballMesh.position.y <= 90) {
-					ballMesh.position.y += 90;
-				}	
-				renderer.render(scene, camera);
-				requestAnimationFrame(animation);
-			}
-			animation();
-		}
-		THREE_ball();
+                    destice = Math.random()>0.5? 1:-1;
+                    var dis = 150 + Math.floor(Math.random()*100);
+                    if(destice == 1){
+                        data.nowposition.z -= dis;
+                    } else {
+                        data.nowposition.x -= dis;
+                    }
+                    addBlock(data.nowposition.x, data.nowposition.y, data.nowposition.z);
+                    // 视角移动
+                    var tween2 = new TWEEN.Tween(group.position);
+                    tween2.easing(TWEEN.Easing.Sinusoidal.In);
+                    if(destice == 1){
+                        tween2.to({y: group.position.y,z: group.position.z + dis,x: group.position.x}, 500);
+                    } else {
+                        tween2.to({y: group.position.y, x: group.position.x + dis,z: group.position.z}, 500);
+                    }
+                    
+                    tween2.start();
+                    tween2.onComplete(function(){
+                        canstart = true;
+                    })
+                })
+            })
 
-		/* 宇宙 */ 
-		var THREE_light = function(){
-			initThree();  //初始化renderer
-			initCamera(); //初始化camera
-			initScene(); //初始化scene
-			initLight(); //初始化light
-			// 创建星球材质模型
-			function getMat(color){
-				return new THREE.MeshStandardMaterial({
-					color: color,
-					roughness: 0.9,
-					transparent: true,
-					opacity: 0,
-					emissive: 0x270000,
-					flatShading: THREE.FlatShading
-				});
-			}
-			// 颜色种类
-			var colors = {
-				red: 0xf85051,
-			    orange: 0xea8962,
-			    yellow: 0xdacf75,
-			    beige: 0xccc58f,
-			    grey: 0xbab7a1,
-			    blue: 0x4379a8,
-			    ocean: 0x4993a8,
-			    green: 0x24a99b
-			}
-			var parameters = {
-			    minRadius: 30,
-			    maxRadius: 50,
-			    minSpeed: .015,
-			    maxSpeed: .025,
-			    particles: 500,
-			    minSize: .1,
-			    maxSize: 2
-			};
-			var colorsLength = Object.keys(colors).length;
-			// 生成一个介于最大值和最小值之间的随机数
-			function randomRange(min, max){
-				return Math.floor(Math.random()*(max-min + 1) + min);
-			}
-			// 生成一个颜色随机数
-			function getRandomColor(){
-				var colorIndex = Math.floor(Math.random() * colorsLength);
-				var colorStr = Object.keys(colors)[colorIndex];
-				return colors[colorStr];
-			}
-			function shiftPosition(pos, radius) {
-			    if (Math.abs(pos) < radius) {
-			        if (pos >= 0) {
-			            return pos + radius;
-			        } else {
-			            return pos - radius;
-			        }
-			    } else {
-			        return pos;
-			    }
-			}
-
-			var star = [];// 星星对象池
-			var planets = []; //星球对象池
-			var nbPlanetsMax = 4;
-			// 星球构造函数
-			// TetrahedronGeometry  正四面体  参数  半径  顶点
-			var Planet = function(z) {
-			    // the geometry of the planet is a tetrahedron
-			    this.planetRadius = randomRange(12, 30);
-			    var planetDetail = randomRange(2, 3);
-			    var geomPlanet = new THREE.TetrahedronGeometry(this.planetRadius, planetDetail);
-
-			    var noise = randomRange(1, 5);
-			    for (var i = 0; i < geomPlanet.vertices.length; i++) {
-			        var v = geomPlanet.vertices[i];
-			        v.x += -noise / 2 + Math.random() * noise;
-			        v.y += -noise / 2 + Math.random() * noise;
-			        v.z += -noise / 2 + Math.random() * noise;
-			    }
-
-			    // create a new material for the planet
-			    var color = getRandomColor();
-			    var matPlanet = getMat(color);
-			    // create the mesh of the planet
-			    this.planet = new THREE.Mesh(geomPlanet, matPlanet);
-
-			    this.ring = new THREE.Mesh();
-			    this.nParticles = 0;
-
-			    // create the particles to populate the ring
-			    this.updateParticlesCount();
-
-			    // Create a global mesh to hold the planet and the ring
-			    this.mesh = new THREE.Object3D();
-			    this.mesh.add(this.planet);
-			    this.mesh.add(this.ring);
-
-			    this.planet.castShadow = true;
-			    this.planet.receiveShadow = true;
-
-			    // update the position of the particles => must be moved to the loop
-			    this.mesh.rotation.x = (Math.random() * 2 - 1) * 2 * Math.PI;
-			    this.mesh.rotation.z = (Math.random() * 2 - 1) * 2 * Math.PI;
-
-			    var posX = randomRange(-1 * Math.floor(width / 4), Math.floor(width / 4));
-			    var posY = randomRange(-1 * Math.floor(height / 4), Math.floor(height / 4));
-			    posX = shiftPosition(posX, this.planetRadius);
-			    posY = shiftPosition(posY, this.planetRadius);
-
-			    this.mesh.position.set(posX, posY, z);
-			    scene.add(this.mesh);
-			}
-			Planet.prototype.destroy = function() {
-			    scene.remove(this.mesh);
-			}
-			Planet.prototype.updateParticlesCount = function() {
-			    var parameters = {
-			        minRadius: randomRange(this.planetRadius + 10, 60),
-			        maxRadius: randomRange(40, 70),
-			        minSpeed: randomRange(0, 5) * 0.1 + randomRange(0, 9) * 0.01,
-			        maxSpeed: randomRange(0, 5) * 0.1 + randomRange(0, 9) * 0.01,
-			        particles: randomRange(0, 1) * randomRange(20, 30),
-			        minSize: randomRange(1, 3) + randomRange(0, 9) * 0.1,
-			        maxSize: randomRange(1, 3) + randomRange(0, 9) * 0.1
-			    };
-				for (var i = this.nParticles; i < parameters.particles; i++) {
-		            var p = new Particle();
-		            p.mesh.rotation.x = Math.random() * Math.PI;
-		            p.mesh.rotation.y = Math.random() * Math.PI;
-		            p.mesh.position.y = -2 + Math.random() * 4;
-		            this.ring.add(p.mesh);
-		        }
-			    // if (this.nParticles < parameters.particles) {
-			    // 	console.log(parameters.particles)
-			    //     // Remove particles
-			    //     for (var i = this.nParticles; i < parameters.particles; i++) {
-			    //         var p = new Particle();
-			    //         p.mesh.rotation.x = Math.random() * Math.PI;
-			    //         p.mesh.rotation.y = Math.random() * Math.PI;
-			    //         p.mesh.position.y = -2 + Math.random() * 4;
-			    //         this.ring.add(p.mesh);
-			    //     }
-			    // } else {
-			    //     // add particles
-			    //     while (this.nParticles > parameters.particles) {
-			    //         var m = this.ring.children[this.nParticles - 1];
-			    //         this.ring.remove(m);
-			    //         m.userData.po = null;
-			    //         this.nParticles--;
-			    //     }
-			    // }
-			    this.nParticles = parameters.particles;
-
-			    // We will give a specific angle to each particle
-			    // to cover the whole ring we need to
-			    // dispatch them regularly
-			    this.angleStep = Math.PI * 2 / this.nParticles;
-			    this.updateParticlesDefiniton();
-			}
-
-			// Update particles definition
-			Planet.prototype.updateParticlesDefiniton = function() {
-
-			    for (var i = 0; i < this.nParticles; i++) {
-			        var m = this.ring.children[i];
-			        var s = parameters.minSize + Math.random() * (parameters.maxSize - parameters.minSize);
-			        m.scale.set(s, s, s);
-			        // set a random distance
-			        m.userData.distance = parameters.minRadius + Math.random() * (parameters.maxRadius - parameters.minRadius);
-
-			        // give a unique angle to each particle
-			        m.userData.angle = this.angleStep * i;
-			        // set a speed proportionally to the distance
-			        // m.userData.angularSpeed = rule3(m.userData.distance, parameters.minRadius, parameters.maxRadius, parameters.minSpeed, parameters.maxSpeed);
-			    }
-			}
-
-			var Particle = function() {
-			    // Size of the particle, make it random
-			    var s = 1;
-
-			    // geometry of the particle, choose between different shapes
-			    var geom,
-			        random = Math.random();
-
-			    if (random < .25) {
-			        // Cube
-			        geom = new THREE.BoxGeometry(s, s, s);
-
-			    } else if (random < .5) {
-			        // Pyramid
-			        geom = new THREE.CylinderGeometry(0, s, s * 2, 4, 1);
-
-			    } else if (random < .75) {
-			        // potato shape
-			        geom = new THREE.TetrahedronGeometry(s, 2);
-
-			    } else {
-			        // thick plane
-			        geom = new THREE.BoxGeometry(s / 6, s, s); // thick plane
-			    }
-			    // color of the particle, make it random and get a material
-			    var color = getRandomColor();
-			    var mat = getMat(color);
-
-			    // create the mesh of the particle
-			    this.mesh = new THREE.Mesh(geom, mat);
-			    this.mesh.receiveShadow = true;
-			    this.mesh.castShadow = true;
-			    this.mesh.userData.po = this;
-			}
-
-
-			// Update particles position
-			Planet.prototype.updateParticlesRotation = function() {
-
-			    // increase the rotation of each particle
-			    // and update its position
-			    for (var i = 0; i < this.nParticles; i++) {
-			        var m = this.ring.children[i];
-			        // increase the rotation angle around the planet
-			        m.userData.angle += m.userData.angularSpeed;
-
-			        // calculate the new position
-			        var posX = Math.cos(m.userData.angle) * m.userData.distance;
-			        var posZ = Math.sin(m.userData.angle) * m.userData.distance;
-			        m.position.x = posX;
-			        m.position.z = posZ;
-
-			        //*
-			        // add a local rotation to the particle
-			        m.rotation.x += Math.random() * .05;
-			        m.rotation.y += Math.random() * .05;
-			        m.rotation.z += Math.random() * .05;
-			        //*/
-			    }
-			}
-
-			function addPlanet(z) {
-			    planets.push(new Planet(z));
-			}
-
-
-			for (var i = 0; i < nbPlanetsMax; i++) {
-		        planets.push(new Planet(-2000 / nbPlanetsMax * i - 500));
-		    }
-
-			function addStars(){
-				// 添加100个星星
-				for(var z = -2000; z<0; z+=20){
-					var geometry = new THREE.SphereGeometry(0.5, 32, 32);
-					var material = new THREE.MeshBasicMaterial({ color: 0xffffff });
-					var sphere = new THREE.Mesh(geometry, material);
-					sphere.position.x = randomRange(-1 * Math.floor(width / 2), Math.floor(width / 2));
-					sphere.position.y = randomRange(-1 * Math.floor(height / 2), Math.floor(height / 2));
-					sphere.position.z = z;
-					sphere.scale.x = sphere.scale.y = 2;
-					scene.add(sphere);
-					star.push(sphere);
-				}
-			}
-			addStars();
-			loop();
-			function animateStars(z){
-				for (var i = 0; i < star.length; i ++) {
-					var stars = star[i];
-					if (stars.position.z > z) {
-						stars.position.z -= 2000;
-						stars.position.x = randomRange(-1 * Math.floor(width / 2), Math.floor(width / 2));
-						stars.position.y = randomRange(-1 * Math.floor(height / 2), Math.floor(height / 2));
-					}
-				}
-			}
-
-			function loop() {
-				 var horizon = -2000 + camera.position.z;
-				 for (var i = 0; i < planets.length; i++) {
-			        if (planets[i].mesh.position.z > camera.position.z) {
-			            planets[i].destroy();
-			            planets.splice(i, 1);
-			        }
-
-			        // If the planet is arriving
-			        if (planets[i].mesh.position.z > horizon && planets[i].planet.material.opacity < 1) {
-			            planets[i].planet.material.opacity += 0.005;
-			            for (var j = 0; j < planets[i].mesh.children[1].children.length; j++) {
-			                planets[i].mesh.children[1].children[j].material.opacity += 0.005;
-			            }
-			        }
-			    }
-			     if (planets.length < nbPlanetsMax) {
-			        addPlanet(camera.position.z - 2000);
-			    }
-
-			    for (var i = 0; i < planets.length; i++) {
-			        planets[i].planet.rotation.y -= 0.01;
-			        planets[i].updateParticlesRotation();
-			    }
-
-				animateStars(camera.position.z);
-				camera.position.z -= 3;
-				renderer.render(scene, camera);
-				requestAnimationFrame(loop);
-			}
-			function rule3(v, vmin, vmax, tmin, tmax) {
-			    var nv = Math.max(Math.min(v, vmax), vmin);
-			    var dv = vmax - vmin;
-			    var pc = (nv - vmin) / dv;
-			    var dt = tmax - tmin;
-			    var tv = tmin + (pc * dt);
-			    return tv;
-
-			}
-			
-		}
-		// THREE_light();
-	</script>
+        })
+    </script>
 </body>
 </html>
